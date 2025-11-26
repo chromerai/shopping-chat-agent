@@ -1,0 +1,1 @@
+import {SAFETY_PROMPT} from "../../Shoppingprompts/safetyPrompt"
