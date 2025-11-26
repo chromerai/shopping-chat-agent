@@ -17,6 +17,6 @@ Respond with a VALID JSON only:
 {{
     "safe": boolean,
     "reason": "brief explanation"
-    "category": "off-topic|malicious|technical|shopping"
+    "category": "off_topic|malicious|shopping"
 }}
 `
