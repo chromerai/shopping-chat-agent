@@ -1,6 +1,6 @@
-import {SAFETY_PROMPT} from "../../Shoppingprompts/safetyPrompt"
+import {SAFETY_PROMPT, SAFETY_SYSTEM_INSTRUCTION, SAFETY_CHECK_SCHEMA} from "../../Shoppingprompts/safetyPrompt"
 import {SafetyResult} from "../../types"
-import {GeminiModel} from "../../models/gemini"
+import { GeminiModel } from "../../models/gemini"
 
 export class SafetyTools {
     private static readonly RED_FLAGS = [
@@ -43,28 +43,26 @@ export class SafetyTools {
         } catch (error: unknown) {
             console.error('LLM safety check failed, falling back to rule based check: ', error)
 
-            let response = "", reason = "", category = ""
+            let response = "", reason = ""
+
             if (error instanceof Error) {
                 if (error.message.includes("timeout") || error.message.includes("network")) {
                     response = "Temporary connectivity issues. Try again Later"
                     reason = "llm_network_error"
-                    category = "malicious"
                 } else if(error.message.includes('quota') || error.message.includes('limit')) {
                     response = "Service currently unavailable.Try again later"
-                    reason = "llm_api_limit",
-                    category = "malicious"
+                    reason = "llm_api_limit"
                 } else {
-                    response =  "I'm unable to process your request at the moment. Please try again later.",
-                    reason = 'llm_unknown_error',
-                    category =  'malicious'
+                    response =  "I'm unable to process your request at the moment. Please try again later."
+                    reason = 'llm_unknown_error'
                 }
-        }
+            }
 
             return {
                 safe: false,
                 response: response,
                 reason: reason,
-                category: category
+                category: 'malicious'
             };
         }
     }
@@ -102,28 +100,33 @@ export class SafetyTools {
 
     }
 
-    private static async llmSafetyCheck(userInput: string): SafetyResult {
+    private static async llmSafetyCheck(userInput: string): Promise<SafetyResult> {
         const safetyPrompt = SAFETY_PROMPT.replace("{query}", userInput)
 
-        const response = await GeminiModel.generateStructuredResponse<{
-            safe: boolean,
-            reason: string,
-            category: string 
-        }>(safetyPrompt)
+        const response = await GeminiModel.generateStructuredResponse(
+            safetyPrompt,
+            SAFETY_CHECK_SCHEMA,
+            {
+                systemInstructions: SAFETY_SYSTEM_INSTRUCTION,
+                temperature: 0.2,
+                maxOutputTokens: 256
+            }
+        );
 
         if(!response.safe) {
+             const unsafeCategory = response.category as 'off_topic' | 'malicious';
             return {
                 safe: false,
-                response: this.getSafetyResponse(response.category),
+                response: this.getSafetyResponse(unsafeCategory),
                 reason: response.reason,
-                category: response.category as 'off_topic' | 'malicious'
+                category: response.category
             }
         }
 
         return {
             safe: true,
             reason: response.reason,
-            category: response.category as 'shopping'
+            category: response.category
         }
     }
 

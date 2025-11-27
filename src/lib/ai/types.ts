@@ -1,4 +1,4 @@
-import {Phone, Session, ShoppingIntent} from "@/types/shopping"
+import {Phone} from "@/types/shopping"
 
 export interface ReActStep {
     thought: string;
