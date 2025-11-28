@@ -1,8 +1,7 @@
-import { Phone } from "@/types/shopping"
-import { ComparisonResult } from "../../types"
+import { Phone, ComparisonResult } from "../../types"
 import { supabase } from "@/lib/db/supabase";
 
-export class comparisonTool {
+export class ComparisonTool {
     static async compareProducts(productNames: string[]): Promise<ComparisonResult> {
         try {
             if(productNames.length < 2 || productNames.length > 2) {

@@ -1,5 +1,5 @@
 import { kv } from "@vercel/kv";
-import { Session } from "@/types/shopping";
+import { Session } from "../types";
 
 export class SessionManager {
     private static readonly SESSION_TTL = 3600;

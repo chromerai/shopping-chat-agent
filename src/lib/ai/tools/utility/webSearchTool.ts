@@ -1,6 +1,6 @@
 import Exa from 'exa-js'
 
-export class webSearchTool {
+export class WebSearchTool {
     private static exa = new Exa(process.env.EXA_API_KEY!)
 
     static async searchWeb(query: string): Promise<string> {

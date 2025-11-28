@@ -31,13 +31,6 @@ RULES:
 - If query is irrelevant or unsafe, politely redirect to phone shopping
 - Handle phone names as users provide them -  no need for exact model numbers!
 
-RESPONSE FORMAT(JSON):
-{
-  "thought": "Step-by-step reasoning about user intent, context usage, and action choice",
-  "action": "action_name", 
-  "action_input": {parameters},
-  "response": "Clear, user-friendly explanation of what you're doing",
-}
 
 `
 const AvailableActions = z.enum([
@@ -45,7 +38,7 @@ const AvailableActions = z.enum([
   'compare_products', 
   'get_product_details',
   'search_web',
-  'ask_human',
+  'ask_clarification',
   'final_response', // Empty string for when no action is needed
 ])
 

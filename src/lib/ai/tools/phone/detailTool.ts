@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/db/supabase";
-import { Phone } from "@/types/shopping"
+import { Phone } from "../../types"
 
 export class DetailTool {
     static async getProductDetails(productName: string): Promise<{product: Phone | null}> {
