@@ -1,6 +1,5 @@
 import { supabase } from "@/lib/db/supabase";
-import { Phone } from "../../types"
-
+import { Phone } from '@/types/shopping'
 export class DetailTool {
     static async getProductDetails(productName: string): Promise<{product: Phone | null}> {
         try {

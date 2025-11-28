@@ -1,4 +1,5 @@
-import { Phone, ComparisonResult } from "../../types"
+import { ComparisonResult } from "../../types"
+import { Phone } from '@/types/shopping'
 import { supabase } from "@/lib/db/supabase";
 
 export class ComparisonTool {

@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/db/supabase';
-import {  Phone, PhoneFilters } from '../../types';
+import { PhoneFilters } from '../../types';
+import { Phone } from '@/types/shopping'
 
 export class PhoneSearchTool {
   static async searchPhones(filters: PhoneFilters): Promise<Phone[]> {

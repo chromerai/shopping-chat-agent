@@ -1,5 +1,6 @@
 import { PhoneSearchTool } from "./searchTool";
-import { Phone, ScoredPhone, RecommendationResult } from '../../types'
+import { ScoredPhone, RecommendationResult } from '../../types'
+import { Phone } from '@/types/shopping'
 import { GeminiModel } from "../../models/gemini";
 import { PREFERENCE_PROMPT, PREFERENCE_PROMPT_SCHEMA, preferencePromptResponse } from "../../Shoppingprompts/preferencePrompt";
 

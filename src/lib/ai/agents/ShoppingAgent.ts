@@ -12,9 +12,12 @@ interface ReActLoopResult {
   iterations: number;
   finalContext: any;
   data: any;
-  status?: 'COMPLETED';
+  status?: 'COMPLETED' | 'MAX_ITERATIONS' | 'ERROR';
 }
 
+function isHumanInputResponse(result: any): result is HumanInputResponse {
+    return result && result.status === 'AWAITING_INPUT';
+}
 export class ShoppingAgent {
     private readonly MAX_ITERATIONS = 5
 
@@ -40,7 +43,7 @@ export class ShoppingAgent {
         const result = await this.executeReactLoop(userInput, session, currentContext)
 
 
-        if(result.status === 'AWAITING_INPUT') {
+        if(isHumanInputResponse(result)) {
             await SessionManager.updateSessionContext(sessionId, result.context)
             return result
         }
@@ -51,8 +54,18 @@ export class ShoppingAgent {
             await SessionManager.addMessage(sessionId, 'assistant', result.finalResponse)
         }
 
+        let responseMessage = result.finalResponse
+        if(!responseMessage) {
+            if(result.status === 'MAX_ITERATIONS') {
+                responseMessage = "I've reached my processing limit. Could you please rephrase or break down your request?";
+            } else if(result.status === 'ERROR') {
+                responseMessage = "I encountered an error while processing your request. Please try again.";
+            } else {
+                responseMessage = "I couldn't complete your request. Please try again.";
+            }
+        }
         return {
-            response: result.finalResponse || "I couldn't complete your request. Please try again.",
+            response: responseMessage,
             type: result.success ? 'success' : 'error',
             sessionId,
             iterations: result.iterations,
@@ -64,7 +77,7 @@ export class ShoppingAgent {
     private async executeReactLoop(userInput: string, 
         session: Session | null, 
         initialContext: any
-    ): Promise<ReActLoopResult| HumanInputResponse> {
+    ): Promise<ReActLoopResult | HumanInputResponse> {
         const messages: Array<{ role: 'user' | 'assistant' | 'system'; content: string }> = [
             { role: 'user', content: userInput }
         ];
@@ -97,9 +110,9 @@ export class ShoppingAgent {
                         currentContext
                     )
 
-                    if(observation.status === 'AWAITING_INPUT'){
+                    if(this.isAwaitingInput(observation)){
                         console.log(`[Agent] Pausing execution for human input`);
-                        return observation;
+                        return observation as HumanInputResponse;
                     }
 
                     currentContext = this.updateContext(currentContext, llmResponse.action!, observation)
@@ -116,17 +129,26 @@ export class ShoppingAgent {
                 } else {
                     console.log(`[Agent] Finished after ${i + 1} iterations - no action needed`);
                     finalResponse = responseText;
-                    break;
+                    return {
+                        success: true,
+                        finalResponse,
+                        iterations: i + 1,
+                        finalContext: currentContext,
+                        data: accumulatedData,
+                        status: 'COMPLETED'
+                    };
                 }
             }
-            return {
-                success: true,
-                finalResponse,
-                iterations: messages.filter(m => m.role === 'assistant').length,
-                finalContext: currentContext,
-                data: accumulatedData
-            }
 
+            console.log(`[Agent] Reached maximum iterations (${this.MAX_ITERATIONS}) without completion`);
+            return {
+                success: false,
+                finalResponse: null,
+                iterations: this.MAX_ITERATIONS,
+                finalContext: currentContext,
+                data: accumulatedData,
+                status: 'MAX_ITERATIONS'
+            };
         } catch (error) {
             console.error(`[Agent] Error in ReAct loop:`, error);
             return {
@@ -134,9 +156,14 @@ export class ShoppingAgent {
                 finalResponse: "I encountered an error while processing your request.",
                 iterations: messages.filter(m => m.role === 'assistant').length,
                 finalContext: currentContext,
-                data: accumulatedData
+                data: accumulatedData,
+                status: 'ERROR'
             };
         }
+    }
+
+    private isAwaitingInput(observation: any): boolean {
+        return observation && typeof observation === 'object' && observation.status === 'AWAITING_INPUT';
     }
 
     private async executeAction(
@@ -145,11 +172,14 @@ export class ShoppingAgent {
         context: any
     ): Promise<any> {
         try {
-            const toolFunction = ALL_TOOLS[action as keyof typeof ALL_TOOLS];
-
-            if(!toolFunction) {
-                return `Error: Unknown Action '${action}'.Available Actions: ${Object.keys(ALL_TOOLS).join(', ')}`
+            if(!(action in ALL_TOOLS)) {
+                const availableActions = Object.keys(ALL_TOOLS).join(', ')
+                return {
+                    error: true,
+                    message: `Error: Unknown Action '${action}'. Available Actions: ${availableActions}`
+                }
             }
+            const toolFunction = ALL_TOOLS[action as keyof typeof ALL_TOOLS];
 
             console.log(`[Agent] Executing action: '${action}' with input: '${action_input}'`)
             const result = await toolFunction(action_input, context)
@@ -157,11 +187,11 @@ export class ShoppingAgent {
             return result
         } catch (error) {
             console.error(`[Agent] Error executing action ${action}:`, error);
-            if(error instanceof Error){
-                return `Error executing ${action}: ${error.message}`
-            } else {
-                return `Unknown error occured: ${error}`
-            }
+            return {
+                error: true,
+                message: error instanceof Error ? error.message : 'Unknown error occurred',
+                action: action
+            };
         }
     }
 
@@ -212,10 +242,14 @@ export class ShoppingAgent {
     }
 
     private updateContext(currentContext: any, action: string, observation: any) {
+        if(observation?.error){
+            return currentContext;
+        }
+
         const updated = { ...currentContext };
 
         switch(action) {
-            case 'get_recommendation': 
+            case 'get_recommendations': 
             if(observation.recommendations) {
                 updated.last_recommendations = observation.recommendations
                 updated.current_products = observation.recommendations.map((r: any) => r.phone)
@@ -244,6 +278,10 @@ export class ShoppingAgent {
     }
 
     private accumulateData(accumulated: any, action: string, observation: any) {
+
+        if(observation?.error) {
+            return accumulated
+        }
         const updated = { ...accumulated };
     
         switch (action) {
