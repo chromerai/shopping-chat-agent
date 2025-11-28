@@ -39,7 +39,8 @@ const AvailableActions = z.enum([
   'get_product_details',
   'search_web',
   'ask_clarification',
-  'final_response', // Empty string for when no action is needed
+  'final_response',
+  '' // Empty string for when no action is needed
 ])
 
 export const SYSTEM_CHECK_SCHEMA = z.object({
