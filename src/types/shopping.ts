@@ -33,6 +33,5 @@ export interface Phone {
     specs: Record<string, any>;
     features: string[];
     image_url?: string;
-    reviews: Review[];
-    operating_system: string; 
+    reviews: Review[]; 
 }

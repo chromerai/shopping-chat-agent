@@ -1,12 +1,4 @@
 import {Phone} from "@/types/shopping"
-
-export interface ReActStep {
-    thought: string;
-    action: string;
-    action_input?: any;
-    response: string;
-}
-
 export interface AgentResponse {
     response: string;
     type: 'success'|'safety_block'|'error';
@@ -31,6 +23,14 @@ export interface UserPreferences {
     os_preferences: 'android' | 'os' | null;
     must_have?: string[];
     deal_breakers?: string[]; 
+}
+
+export interface PhoneFilters {
+  brand?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  features?: string[];
+  operating_system?: 'android' | 'ios';
 }
 
 export interface ScoredPhone {
