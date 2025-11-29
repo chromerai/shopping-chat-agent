@@ -4,12 +4,12 @@ A sophisticated AI-powered shopping assistant for mobile phones built with Next.
 
 ## **Table of Contents**
 
-- Setup Instructions
-- Tech Stack & Architecture
-- Agent System & ReAct Loop
-- Tool System
-- Prompt Design & Safety Strategy
-- Known Limitations
+- [Setup Instructions](#setup-instructions)
+- [Tech Stack & Architecture](#tech-stack--architecture)
+- [Agent System & ReAct Loop](#agent-system--react-loop)
+- [Tool System](#tool-system)
+- [Prompt Design & Safety Strategy](#prompt-design--safety-strategy)
+- [Known Limitations](#known-limitations)
 
 ## Setup Instructions
 
