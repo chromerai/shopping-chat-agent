@@ -60,6 +60,7 @@ export class RecommendationTool {
         filters.brand = preferences.brand_preferences
        }
 
+
        if(preferences.size_preference){
         const sizeRange = this.getSizeRange(preferences.size_preference);
         if(sizeRange) {
@@ -78,16 +79,34 @@ export class RecommendationTool {
             tradeoffs: string[] = []
 
             if(preferences.budget && phone.price) {
-                if(phone.price >= preferences.budget.min && phone.price <= preferences.budget.max){
-                    score += 20;
-
-                    matchReasons.push("within Budget")
-                } else if(phone.price > preferences.budget.max) {
-                    score -= 20;
-                    tradeoffs.push('over budget');
-                } else if(phone.price < preferences.budget.min) {
-                    score -= 20;
-                    tradeoffs.push("below min Budget")
+                const min = preferences.budget.min;
+                const max = preferences.budget.max;
+                const midpoint = (min + max) / 2;  // Ideal price point
+                
+                if(phone.price >= min && phone.price <= max) {
+                    // Within budget - score based on proximity to midpoint
+                    const range = max - min;
+                    const distance = Math.abs(phone.price - midpoint);
+                    const proximityScore = 20 * (1 - distance / (range / 2));
+                    
+                    score += proximityScore;
+                    matchReasons.push("within Budget");
+                    
+                    // Bonus for being cheaper (value preference)
+                    if(phone.price < midpoint) {
+                        score += 5;
+                        matchReasons.push("great value");
+                    }
+                } else if(phone.price > max) {
+                    // Over budget - penalize based on how far over
+                    const overAmount = phone.price - max;
+                    const penalty = Math.min(20, (overAmount / max) * 20);
+                    score -= penalty;
+                    tradeoffs.push(`₹${overAmount} over budget`);
+                } else {
+                    // Under minimum (might be suspiciously cheap)
+                    score += 10;
+                    tradeoffs.push("below typical budget range");
                 }
             }
 
@@ -144,7 +163,7 @@ export class RecommendationTool {
         const rankedPhones = scoredPhones
             .filter(item => item.score > 0)
             .sort((a, b) => b.score - a.score)
-            .slice(0, 5)
+            
 
             const rationale = await this.generateRationale(rankedPhones, preferences)
 

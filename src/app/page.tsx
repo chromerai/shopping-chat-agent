@@ -20,6 +20,8 @@ export default function Home() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [awaitingInput, setAwaitingInput] = useState(false);
+  const [savedContext, setSavedContext] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -42,7 +44,7 @@ export default function Home() {
     setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
 
     try {
-      // Call your API route
+      
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -67,18 +69,24 @@ export default function Home() {
           role: 'assistant', 
           content: data.response 
         }]);
+        setAwaitingInput(false);
+        setSavedContext(null);
       } else if (data.status === 'AWAITING_INPUT') {
         // Handle human input request
         setMessages(prev => [...prev, { 
           role: 'assistant', 
           content: data.message
         }]);
+        setAwaitingInput(true);
+        setSavedContext(data.context);
       } else {
         // Normal response
         setMessages(prev => [...prev, { 
           role: 'assistant', 
           content: data.response 
         }]);
+        setAwaitingInput(false);
+        setSavedContext(null);
       }
 
     } catch (error) {

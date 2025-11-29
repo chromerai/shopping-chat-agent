@@ -7,9 +7,13 @@ export class PhoneSearchTool {
     try {
       let query = supabase.from('phones').select('*');
 
+      if (filters.operating_system) {
+        query = query.ilike('specs->>os', `${filters.operating_system}%`);
+        console.log(filters.operating_system)
+      }
       // Apply filters
       if (filters.brand) {
-        query = query.ilike('brand', `%${filters.brand}%`);
+        query = query.ilike('brand', `${filters.brand}%`);
       }
 
       if (filters.minPrice !== undefined) {
@@ -18,10 +22,6 @@ export class PhoneSearchTool {
 
       if (filters.maxPrice !== undefined) {
         query = query.lte('price', filters.maxPrice);
-      }
-
-      if (filters.operating_system) {
-        query = query.ilike('specs->>os', `${filters.operating_system}`);
       }
 
       if (filters.minDisplaySize) {

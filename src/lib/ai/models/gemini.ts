@@ -44,7 +44,6 @@ export class GeminiModel {
     ): Promise<z.infer<T>> {
 
         try {
-            console.log("inside structured")
             const response = await this.genAi.models.generateContent({
                 model: "gemini-2.5-flash",
                 contents: prompt,
