@@ -227,7 +227,8 @@ export const SYSTEM_CHECK_SCHEMA = z.object({
 
 ### Agent System Limitations
 
-- **Max 5 Iterations**: Complex multi-step queries may hit iteration limits
+- **Max 5 Iterations**: Complex multi-step queries may hit iteration limits. Most operations are over in an average of 2.5 iterations,
+which means 4 ~ 5 API Calls to Gemini on average per operation/query ( not including Recommendation tool )
 - **Context Window**: Limited by Gemini's context length for long conversations
 - **Tool Calling Accuracy**: Occasional misclassification of when to use specific tools
 - **State Management**: Session context may become large over long conversations
@@ -239,11 +240,11 @@ or token counting (though outputs are restricted to 1024 max tokens)
 - **Limited Inventory**: Only 60 mobile phones in the database
 - **Static Data**: Mock data may not reflect current market availability
 - **No Real-time Pricing**: Cannot provide live pricing or availability
-- There are some APIs that provide mobile info, however they are not reliable or consistent and mostly for US, EU and Canada but not India.
+- There are some APIs that provide mobile info; however, they are not reliable or consistent, and mostly for the US, EU, and Canada, but not India.
 
 ### Technical Limitations
 
-- **External API Dependencies**: Gemini, Supabase, and Redis availability
+- **External API Dependencies**: Gemini, Supabase, and Redis availability. Also, Gemini Free Tier restricts API calls to a maximum of 10 - 15 RPM and 200 - 250 RPD
 - **Rate Limiting**: Subject to external API rate limits
 - **Session Timeouts**: Redis sessions have expiration limits
 
