@@ -16,5 +16,14 @@ export function useSession() {
     setSessionId(clientSessionId);
   }, []);
 
-  return { sessionId };
+  const newChat = () => {
+    // Generate new session ID
+    const newSessionId = crypto.randomUUID();
+    localStorage.setItem('client_session_id', newSessionId);
+    
+    // Refresh the page
+    window.location.reload();
+  };
+
+  return { sessionId, newChat };
 }

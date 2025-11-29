@@ -10,7 +10,7 @@ interface Message {
 }
 
 export default function Home() {
-  const { sessionId } = useSession();
+  const { sessionId, newChat } = useSession();
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
@@ -122,8 +122,11 @@ export default function Home() {
           <p className="text-lg text-gray-600">
             Chat with AI to find your perfect phone
           </p>
-          <div className="mt-2 text-sm text-gray-500">
-            Session ID: {sessionId ? sessionId.slice(0, 25) + '...' : 'Loading...'}
+          <div className="mt-2 text-sm text-gray-500 flex items-center justify-center gap-4">
+            <span>Session ID: {sessionId ? sessionId.slice(0, 25) + '...' : 'Loading...'}</span>
+            <button 
+            onClick={newChat}
+            className='px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium text-sm'>New Chat</button>
           </div>
         </header>
 
