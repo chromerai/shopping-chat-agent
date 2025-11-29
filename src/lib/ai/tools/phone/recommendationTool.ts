@@ -10,6 +10,7 @@ export class RecommendationTool {
         context: any,
     ): Promise<RecommendationResult> {
         try {
+            
             const userPreferences = await this.analysePreferences(userQuery, context)
             const potentialPhones = await this.getPotentialPhones(userPreferences)
             const scoredPhones = await this.scorePotentialPhones(potentialPhones, userPreferences)
@@ -47,7 +48,7 @@ export class RecommendationTool {
         const filters: any = {}
 
        if(preferences.os_preference){
-        filters.os_preference = preferences.os_preference
+        filters.operating_system = preferences.os_preference
        }
 
        if(preferences.budget){
@@ -59,9 +60,13 @@ export class RecommendationTool {
         filters.brand = preferences.brand_preferences
        }
 
-       if(preferences.feature_priorities && preferences.feature_priorities.length > 0){
-        filters.feature_priorities = preferences.feature_priorities
-       }
+       if(preferences.size_preference){
+        const sizeRange = this.getSizeRange(preferences.size_preference);
+        if(sizeRange) {
+            filters.minDisplaySize = sizeRange.min;
+            filters.maxDisplaySize = sizeRange.max;
+        }
+    }
 
        return await PhoneSearchTool.searchPhones(filters)
     }
@@ -108,6 +113,20 @@ export class RecommendationTool {
                     }
                 })
             }
+
+            if(preferences.size_preference && phone.specs.display_size) {
+            const sizeRange = this.getSizeRange(preferences.size_preference);
+            if(sizeRange) {
+                if(phone.specs.display_size >= sizeRange.min && phone.specs.display_size <= sizeRange.max) {
+                    score += 25; // High score for matching size preference
+                    matchReasons.push(`${preferences.size_preference} size (${phone.specs.display_size}″)`);
+                } else {
+                    score -= 15;
+                    const sizeDiff = phone.specs.display_size > sizeRange.max ? 'larger' : 'smaller';
+                    tradeoffs.push(`${sizeDiff} than preferred (${phone.specs.display_size}″)`);
+                }
+            }
+        }
 
             return {
                 phone,
@@ -191,5 +210,19 @@ export class RecommendationTool {
     
     return summary;
   }
+
+  private static getSizeRange(sizePreference: string): { min: number, max: number } | null {
+    const sizeRanges: Record<string, { min: number, max: number }> = {
+        'compact': { min: 6.1, max: 6.58 },
+        'small': { min: 6.1, max: 6.58 },
+        'medium': { min: 6.58, max: 7.1 },
+        'standard': { min: 6.58, max: 7.1 },
+        'large': { min: 7.1, max: 7.4 },
+        'big': { min: 7.1, max: 7.4 },
+        'extra large': { min: 7.4, max: 8.0 }
+    };
+    
+    return sizeRanges[sizePreference.toLowerCase()] || null;
+}
 
 }

@@ -18,7 +18,7 @@ Extract the following:
 Respond with JSON 
 {
     "use_case": string,
-    "size_preferences": "compact" | "standard" | "large" | null
+    "size_preferences": "compact" | "standard" | "large" | "small" | "medium" | null
     "feature_priorities": string[] | null
     "budget": {"min": number, "max": number} | null,
     "brand_preferences": string[],
@@ -32,8 +32,8 @@ const budgetSchema = z.object({
 }).describe('A defined range for the user\'s budget preference in INR');
 
 export const PREFERENCE_PROMPT_SCHEMA = z.object({
-    use_case: z.string().describe("Primary sceanrio or use-case for the mobile phone like photography, gaming, general use, productivity, work"),
-    size_preference: z.enum(['compact', 'standard', 'large'])
+    use_case: z.string().default('photography').describe("Primary scenario or use-case for the mobile phone like cost-saver, budget, photography, gaming, general use, productivity, work"),
+    size_preference: z.enum(['compact', 'standard', 'large', 'small', 'medium'])
     .nullable()
     .describe("The preferred physical size of the device. Can be null if the user has no preference."),
     feature_priorities: z.array(z.string())

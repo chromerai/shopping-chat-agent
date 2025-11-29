@@ -8,16 +8,22 @@ import { WebSearchTool } from './utility/webSearchTool';
 
 export const ALL_TOOLS = {
   // Product data tools
-  get_recommendations: RecommendationTool.getRecommendations,
-  compare_products: ComparisonTool.compareProducts,
-  get_product_details: DetailTool.getProductDetails,
+  get_recommendations: (input: string, context: any) => 
+    RecommendationTool.getRecommendations(input, context),
+  compare_products: (input: any, context: any) => 
+    ComparisonTool.compareProducts(input),
+  get_product_details: (input: string, context: any) => 
+    DetailTool.getProductDetails(input,),
   
   //utility tools
-  ask_clarification: HumanInputTool.askHuman, 
-  search_web: WebSearchTool.searchWeb,
+  ask_clarification: (input: string, context: any) => 
+    HumanInputTool.askHuman(input, context), 
+  search_web: (input: string, context: any) => 
+    WebSearchTool.searchWeb(input),
   
   // Safety tool
-  check_safety: SafetyTools.safetyCheck,
+  check_safety: (input: string, context: any) => 
+    SafetyTools.safetyCheck(input),
 };
 
 export type ToolName = keyof typeof ALL_TOOLS;

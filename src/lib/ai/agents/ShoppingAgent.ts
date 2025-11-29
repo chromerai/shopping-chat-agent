@@ -5,7 +5,6 @@ import { SafetyTools } from "../tools/safety/safetyTools";
 import { ALL_TOOLS } from "../tools";
 import { AgentResult, Session, HumanInputResponse } from "../types";
 
-
 interface ReActLoopResult {
   success: boolean;
   finalResponse: string | null;
@@ -91,21 +90,36 @@ export class ShoppingAgent {
                 console.log(`[Agent] iteration: ${i + 1} for sessionId: ${session?.id}`)
 
                 const llmResponse = await this.getLLMResponse(messages, currentContext, i)
-                const responseText = llmResponse.response
+                const  thoughtText = llmResponse.thought
 
-                if(!responseText) {
-                    throw new Error("empty response from LLM")
+                if(!thoughtText) {
+                    throw new Error("empty thought from LLM")
                 }
 
-                messages.push({role: 'assistant', content: responseText})
+                messages.push({role: 'assistant', content: `Thought: ${thoughtText}`})
 
-                const hasAction = llmResponse.action && llmResponse.action !== 'final_response'
+                if(llmResponse.answer && llmResponse.answer.trim() !== ''){
+                    console.log(`[Agent] Agent provided final answer after ${i + 1} iterations`);
+                    finalResponse = llmResponse.answer;
+                    
+                    // Add final answer to conversation history
+                    messages.push({role: 'assistant', content: `Answer: ${finalResponse}`})
+                    
+                    return {
+                        success: true,
+                        finalResponse,
+                        iterations: i + 1,
+                        finalContext: currentContext,
+                        data: accumulatedData,
+                        status: 'COMPLETED'
+                    };
+                }
 
-                if(hasAction) {
+                if(llmResponse.action && llmResponse.action !== 'exit') {
                     console.log(`[Agent] executing action: ${llmResponse.action}`)
 
                     const observation = await this.executeAction(
-                        llmResponse.action!,
+                        llmResponse.action,
                         llmResponse.action_input!,
                         currentContext
                     )
@@ -127,15 +141,15 @@ export class ShoppingAgent {
                         content: `Observation: ${observationContent}`
                     });
                 } else {
-                    console.log(`[Agent] Finished after ${i + 1} iterations - no action needed`);
-                    finalResponse = responseText;
+                    console.log(`[Agent] No action or answer provided after ${i + 1} iterations`);
+                    finalResponse = null;
                     return {
-                        success: true,
+                        success: false,
                         finalResponse,
                         iterations: i + 1,
                         finalContext: currentContext,
                         data: accumulatedData,
-                        status: 'COMPLETED'
+                        status: 'ERROR'
                     };
                 }
             }
@@ -182,7 +196,21 @@ export class ShoppingAgent {
             const toolFunction = ALL_TOOLS[action as keyof typeof ALL_TOOLS];
 
             console.log(`[Agent] Executing action: '${action}' with input: '${action_input}'`)
-            const result = await toolFunction(action_input, context)
+            let processedInput = action_input;
+            if(action === 'get_recommendations' && action_input?.user_query) {
+                processedInput = action_input.user_query;
+            } else if(action === 'compare_products' && action_input?.phone_names) {
+                processedInput = action_input.phone_names;
+            } else if(action === 'get_product_details' && action_input?.phone_name) {
+                processedInput = action_input.phone_name;
+            } else if(action === 'search_web' && action_input?.query) {
+                processedInput = action_input.query;
+            } else if(action === 'ask_clarification' && action_input?.question) {
+                processedInput = action_input.question;
+            }
+
+            console.log(`ProcessedInput type: ${typeof processedInput}`)
+            const result = await toolFunction(processedInput, context)
 
             return result
         } catch (error) {
@@ -190,7 +218,8 @@ export class ShoppingAgent {
             return {
                 error: true,
                 message: error instanceof Error ? error.message : 'Unknown error occurred',
-                action: action
+                action: action,
+    
             };
         }
     }
@@ -202,7 +231,7 @@ export class ShoppingAgent {
     ): Promise<ReActStep> {
         const prompt = this.buildReactPrompt(messages, context, iteration)
         try {
-            return await GeminiModel.generateStructuredResponse(
+            return await GeminiModel.generateStructuredResponse<typeof SYSTEM_CHECK_SCHEMA>(
                 prompt,
                 SYSTEM_CHECK_SCHEMA,
                 {
@@ -214,9 +243,9 @@ export class ShoppingAgent {
             console.error('Error getting LLM response:', error);
             return {
                 thought: 'Error in response parsing, providing final response',
-                action: '',
+                action: 'exit',
                 action_input: {},
-                response: "I'm having trouble processing that. Could you try rephrasing your question?"
+                answer: "I'm having trouble processing that. Could you try rephrasing your question?"
             }
         }
     }
@@ -238,7 +267,8 @@ export class ShoppingAgent {
         Conversation History: 
         ${conversationHistory}
 
-        CURRENT ITERATION: ${iteration + 1} of ${this.MAX_ITERATIONS}`
+        CURRENT ITERATION: ${iteration + 1} of ${this.MAX_ITERATIONS}
+        Provide your next Thought, and then either an Action (with PAUSE) or your final Answer.`
     }
 
     private updateContext(currentContext: any, action: string, observation: any) {

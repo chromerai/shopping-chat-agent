@@ -1,4 +1,7 @@
 import Exa from 'exa-js'
+import dotenv  from 'dotenv'
+
+dotenv.config();
 
 export class WebSearchTool {
     private static exa = new Exa(process.env.EXA_API_KEY!)

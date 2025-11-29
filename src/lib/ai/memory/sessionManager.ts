@@ -94,6 +94,9 @@
 
 import { createClient } from 'redis';
 import { Session } from "../types";
+import dotenv  from 'dotenv'
+
+dotenv.config();
 
 // Create Redis client instance
 const redis = createClient({ 

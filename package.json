@@ -22,7 +22,8 @@
     "react-dom": "19.2.0",
     "redis": "^5.10.0",
     "tailwind-merge": "^3.4.0",
-    "zod": "^4.1.13"
+    "zod": "^4.1.13",
+    "zod-to-json-schema": "^3.25.0"
   },
   "devDependencies": {
     "@supabase/supabase-js": "^2.84.0",

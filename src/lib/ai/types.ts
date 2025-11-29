@@ -46,6 +46,8 @@ export interface PhoneFilters {
   maxPrice?: number;
   features?: string[];
   operating_system?: 'android' | 'ios';
+  minDisplaySize: number;
+  maxDisplaySize: number;
 }
 
 export interface ScoredPhone {

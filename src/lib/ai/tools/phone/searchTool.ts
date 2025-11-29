@@ -20,12 +20,16 @@ export class PhoneSearchTool {
         query = query.lte('price', filters.maxPrice);
       }
 
-      if (filters.features && filters.features.length > 0) {
-        query = query.overlaps('features', filters.features);
+      if (filters.operating_system) {
+        query = query.ilike('specs->>os', `${filters.operating_system}`);
       }
 
-      if (filters.operating_system) {
-        query = query.eq('operating_system', filters.operating_system);
+      if (filters.minDisplaySize) {
+        query = query.gte('specs->display_size', filters.minDisplaySize);
+      }
+              
+      if (filters.maxDisplaySize) {
+        query = query.lte('specs->display_size', filters.maxDisplaySize);
       }
 
       const { data, error } = await query;

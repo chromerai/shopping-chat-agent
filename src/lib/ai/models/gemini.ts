@@ -1,5 +1,8 @@
 import { GoogleGenAI } from "@google/genai";
 import { z } from 'zod';
+import dotenv  from 'dotenv'
+
+dotenv.config();
 
 export class GeminiModel {
     private static genAi = new GoogleGenAI({apiKey: process.env.GEMINI_API_KEY})
@@ -41,8 +44,9 @@ export class GeminiModel {
     ): Promise<z.infer<T>> {
 
         try {
+            console.log("inside structured")
             const response = await this.genAi.models.generateContent({
-                model: "gemini-2.0-flash",
+                model: "gemini-2.5-flash",
                 contents: prompt,
                 config: {
                     systemInstruction: options?.systemInstructions,
@@ -51,11 +55,12 @@ export class GeminiModel {
                     topK: 40,
                     maxOutputTokens: options?.maxOutputTokens ?? 1024,
                     responseMimeType: "application/json",
-                    responseSchema: schema
+                    responseJsonSchema: z.toJSONSchema(schema)
                 },
             });
 
             const text = response.text
+            console.log(text)
             if(!text){
                 throw new Error('Empty response from Gemini')
             }

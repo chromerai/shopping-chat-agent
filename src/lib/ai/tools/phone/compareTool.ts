@@ -88,7 +88,7 @@ export class ComparisonTool {
     }
 
     const differences: string[] = []
-    const specsToCompare = ['price', 'screen_size', 'battery_capacity', 'ram', 'storage', 'main_camera_resolution']
+    const specsToCompare = ['price', 'display_size', 'battery_capacity', 'ram', 'storage', 'main_camera_resolution']
 
     specsToCompare.forEach(spec => {
         const values = products.map((product, idx) => {

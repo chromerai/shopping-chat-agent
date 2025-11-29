@@ -1,12 +1,12 @@
 import {SAFETY_PROMPT, SAFETY_SYSTEM_INSTRUCTION, SAFETY_CHECK_SCHEMA} from "../../Shoppingprompts/safetyPrompt"
 import {SafetyResult} from "../../types"
 import { GeminiModel } from "../../models/gemini"
-
+import { zodToJsonSchema } from "zod-to-json-schema";
 export class SafetyTools {
     private static readonly RED_FLAGS = [
         /system prompt|instructions?|how are you programmed/i,
         /api key|password|secret|token|credientials/i,
-        /ignore|override|break|bypass|hack|/i,
+        /ignore|override|break|bypass|hack/i,
         /trash|shitty|hate|terrible|rubbish/i,
         /reveal|show me your|internal|behind the scenes/i,
         /don't follow|disregard|skip|avoid.*rules/i,
@@ -24,6 +24,7 @@ export class SafetyTools {
         /**
          * function checking for appropriateness of the input
          */
+        console.log("inside SafetyResult", userInput)
         const ruleBasedResult = this.ruleBasedSafetyCheck(userInput)
         if(!ruleBasedResult.safe) {
             return ruleBasedResult;

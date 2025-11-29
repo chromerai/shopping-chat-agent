@@ -12,18 +12,36 @@ export class DetailTool {
     }
 
     static async findProductByName(productName: string): Promise<Phone | null> {
-    const cleanedName = productName.toLowerCase().replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
+    const cleanedName = productName.toLowerCase().trim();
     
-    let { data, error } = await supabase
-      .from('phones')
-      .select('*')
-      .or(`model.ilike.%${cleanedName}%,brand.ilike.%${cleanedName}%`)
-      .limit(1);
+     let { data } = await supabase
+            .from('phones')
+            .select('*')
+            .ilike('brand', `${cleanedName}%`)
+            .limit(1);
 
-    if (error || !data || data.length === 0) {
-      return null;
-    }
-    
-    return data[0] as Phone;
+      if (data && data.length > 0) {
+          return data[0] as Phone;
+      }
+
+        // Try prefix match on model (USES idx_phones_model)
+      ({ data } = await supabase
+          .from('phones')
+          .select('*')
+          .ilike('model', `${cleanedName}%`)
+          .limit(1));
+
+      if (data && data.length > 0) {
+          return data[0] as Phone;
+      }
+
+        // Fallback to contains search (won't use indexes efficiently)
+      ({ data } = await supabase
+          .from('phones')
+          .select('*')
+          .or(`model.ilike.%${cleanedName}%,brand.ilike.%${cleanedName}%`)
+          .limit(1));
+      
+      return data?.[0] as Phone || null;
   }
 }
