@@ -1,4 +1,8 @@
 import Exa from 'exa-js';
+import dotenv  from 'dotenv'
+
+dotenv.config();
+
 const exa = new Exa(process.env.EXA_API_KEY);
 
 const result = await exa.searchAndContents(

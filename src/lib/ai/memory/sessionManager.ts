@@ -108,13 +108,10 @@ redis.on('error', (err) => {
   console.error('Redis Client Error:', err);
 });
 
-// Connect to Redis
-let isConnected = false;
 
 const ensureConnected = async () => {
-  if (!isConnected) {
+  if (!redis.isOpen) {
     await redis.connect();
-    isConnected = true;
   }
 };
 
@@ -236,9 +233,8 @@ export class SessionManager {
 
     // Optional: Close Redis connection when needed
     static async disconnect(): Promise<void> {
-        if (isConnected) {
+        if (!redis.isOpen) {
             await redis.quit();
-            isConnected = false;
         }
     }
 }
